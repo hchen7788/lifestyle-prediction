@@ -1,4 +1,7 @@
 import pandas as pd
+import numpy as np
+import networkx as nx
+import community as community_louvain
 
 def load_data(partition):
     
@@ -23,3 +26,46 @@ def get_similarity_graph(embeddings):
 
 def get_clusters(similarity_graph):
     pass
+
+
+# Assuming that the similarity graph is a 2D matrix passed
+# Change threshold depending on results
+# Documentation: https://python-louvain.readthedocs.io/en/latest/api.html
+def louvain_method(similarity_graph, threshold=0.2):
+    print('inside louvain_method')
+    assert len(similarity_graph[0]) == len(similarity_graph), 'Similarity graph should be square matrix!'
+
+    def is_symmetric(graph_sim):
+        sim_graph_np = np.array(graph_sim)
+        return np.array_equal(sim_graph_np, sim_graph_np.T)
+    
+    assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
+    
+    graph = nx.Graph()
+
+    num_nodes = len(similarity_graph)
+
+    for i in range(num_nodes):
+        for j in range(i+1, num_nodes):
+            # TODO: Check if > or >= is more appropriate
+            if similarity_graph[i][j] >= threshold:
+                # TODO: Check if labels can be accessed via similarity graph. That way the similarity can 
+                graph.add_edge(i, j, weight=similarity_graph[i][j])
+    
+    best_partition = community_louvain.best_partition(graph, resolution=1.5)
+
+    clusters = {}
+    for node, community in best_partition.items():
+        # Every node [0 indexed] will be assigned a community
+        # node 0 -> community 0
+        # node 1 -> community 0
+
+        clusters.setdefault(community, []).append(node)
+    
+    return clusters
+
+
+
+
+    
+
