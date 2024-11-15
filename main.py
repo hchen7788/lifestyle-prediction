@@ -54,15 +54,19 @@ for i in range(len(y_test)):
 
 
 # clustering (Louvain, etc)
-clusters = utils.get_clusters(scaled_similarity_graph)
+clusters = utils.get_clusters(scaled_similarity_graph, threshold=0.7, method="louvain")
 
 # Calculate average work-life balance score per cluster
 cluster_averages = utils.calculate_cluster_averages(clusters, target)
 
 print("Average work-life balance score per cluster:", cluster_averages)
 
-# Plot with well-being scores and cluster colors
-utils.plot_clusters_with_scores(scaled_similarity_graph, clusters, target)
+# Plot with well-being scores and cluster colors, save to file
+# utils.plot_clusters_with_scores(scaled_similarity_graph, clusters, target, filename="network_graph.png")
+
+# Plot clusters vs. scores, save to file
+utils.plot_clusters_vs_scores(clusters, target, filename="scatter_clusters_vs_scores.png")
+
 
 # Print each cluster with its nodes
 for cluster, nodes in clusters.items():

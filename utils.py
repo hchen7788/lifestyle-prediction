@@ -28,9 +28,9 @@ def get_similarity_graph(embeddings):
     return cosine_similarity(embeddings)
     
 
-def get_clusters(similarity_graph, method="louvain"):
+def get_clusters(similarity_graph, threshold=0.5, method="louvain"):
     if method == "louvain":
-        return louvain_method(similarity_graph)    
+        return louvain_method(similarity_graph, threshold)    
 
 
 # # Assuming that the similarity graph is a 2D matrix passed
@@ -70,8 +70,7 @@ def get_clusters(similarity_graph, method="louvain"):
 #     return clusters
 
 
-#Louvain sean version
-def louvain_method(similarity_graph, threshold=0.2):
+def louvain_method(similarity_graph, threshold):
     print('inside louvain_method')
     
     # Check that the similarity graph is a square matrix
@@ -83,22 +82,16 @@ def louvain_method(similarity_graph, threshold=0.2):
 
     assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
     
-    # # Create an undirected weighted graph
-    # graph = nx.Graph()
-    # num_nodes = similarity_graph.shape[0]
-
-    # # Add edges based on thresholded similarity values
-    # for i in range(num_nodes):
-    #     for j in range(num_nodes):
-    #         # if similarity_graph[i, j] >= threshold:
-    #         if i != j:
-    #             graph.add_edge(i, j, weight=similarity_graph[i, j])
-
+    # Create an undirected weighted graph from the similarity matrix
     graph = nx.from_numpy_array(similarity_graph)
     graph.remove_edges_from(nx.selfloop_edges(graph))
 
+    # Remove edges with weight less than the threshold
+    edges_to_remove = [(u, v) for u, v, weight in graph.edges(data="weight") if weight < threshold]
+    graph.remove_edges_from(edges_to_remove)
+
     # Apply the Louvain method for community detection
-    best_partition = community_louvain.best_partition(graph, resolution=1.25)
+    best_partition = community_louvain.best_partition(graph, resolution=1.1)
 
     # Group nodes by their community
     clusters = {}
@@ -106,6 +99,7 @@ def louvain_method(similarity_graph, threshold=0.2):
         clusters.setdefault(community, []).append(node)
     
     return clusters
+
 
 def calculate_cluster_averages(clusters, target_values):
     """
@@ -125,8 +119,16 @@ def calculate_cluster_averages(clusters, target_values):
     
     return cluster_averages
 
-def plot_clusters_with_scores(similarity_graph, clusters, scores):
+def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clusters_with_scores.png"):
+    """
+    Plot clusters with well-being scores in a network graph.
     
+    Parameters:
+    - similarity_graph: 2D array representing the similarity graph
+    - clusters: dict where keys are cluster labels and values are lists of node indices
+    - scores: Series or list of scores corresponding to each node
+    - filename: Name of the file to save the plot
+    """
     graph = nx.Graph(similarity_graph)
     # Create a color map for clusters
     unique_clusters = list(clusters.keys())
@@ -138,7 +140,7 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores):
 
     # Draw nodes with color based on cluster and size based on work-life balance score
     for cluster, nodes in clusters.items():
-        node_sizes = [1 for score in scores] #[scores[node] * 20 for node in nodes]  # Scale size by score
+        node_sizes = [1 for score in scores]  # [scores[node] * 20 for node in nodes]  
         nx.draw_networkx_nodes(graph, pos, nodelist=nodes, node_size=node_sizes,
                                node_color=[cluster_color_map[cluster]] * len(nodes),
                                label=f"Cluster {cluster}")
@@ -152,5 +154,54 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores):
     # Add a legend
     plt.legend(scatterpoints=1, loc="upper right", markerscale=0.5, fontsize=8)
     plt.title("Network Graph of Well-being Scores by Cluster")
+
+    # Save plot to file
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+
+    # Display the plot
     plt.show()
 
+def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png"):
+    """
+    Plot each point where the y-axis is the cluster index (sorted by average work-life balance score)
+    and the x-axis is the well-being score. Each cluster is represented with a different color.
+    
+    Parameters:
+    - clusters: dict where keys are cluster labels and values are lists of node indices
+    - scores: Series or list of work-life balance scores corresponding to each node
+    - filename: Name of the file to save the plot
+    """
+    # Calculate average work-life balance score for each cluster
+    cluster_averages = {cluster: scores.iloc[nodes].mean() for cluster, nodes in clusters.items()}
+
+    # Sort clusters by average work-life balance score
+    sorted_clusters = sorted(cluster_averages.items(), key=lambda x: x[1])
+    sorted_cluster_indices = {cluster: idx for idx, (cluster, _) in enumerate(sorted_clusters)}
+
+    # Create a color map for clusters
+    unique_clusters = list(sorted_cluster_indices.keys())
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_clusters)))
+    cluster_color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
+
+    # Initialize the plot
+    plt.figure(figsize=(10, 6))
+
+    # Plot each cluster
+    for cluster, nodes in clusters.items():
+        cluster_scores = scores.iloc[nodes]
+        sorted_y = sorted_cluster_indices[cluster]
+        plt.scatter(cluster_scores, [sorted_y] * len(cluster_scores), 
+                    color=cluster_color_map[cluster], label=f"Cluster {cluster}", alpha=0.7)
+
+    # Add labels and legend
+    plt.xlabel("Well-being Score")
+    plt.ylabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
+    plt.title("Well-being Scores by Sorted Clusters")
+    plt.legend(loc="best", fontsize=8)
+    plt.grid(True, linestyle='--', alpha=0.5)
+
+    # Save plot to file
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
+
+    # Display the plot
+    plt.show()
