@@ -28,9 +28,9 @@ def get_similarity_graph(embeddings):
     return cosine_similarity(embeddings)
     
 
-def get_clusters(similarity_graph, threshold=0.5, method="louvain"):
+def get_clusters(similarity_graph, threshold=0.5, resolution=1.0, method="louvain"):
     if method == "louvain":
-        return louvain_method(similarity_graph, threshold)    
+        return louvain_method(similarity_graph, threshold, resolution)    
 
 
 # # Assuming that the similarity graph is a 2D matrix passed
@@ -70,7 +70,7 @@ def get_clusters(similarity_graph, threshold=0.5, method="louvain"):
 #     return clusters
 
 
-def louvain_method(similarity_graph, threshold):
+def louvain_method(similarity_graph, threshold, resolution):
     print('inside louvain_method')
     
     # Check that the similarity graph is a square matrix
@@ -91,7 +91,7 @@ def louvain_method(similarity_graph, threshold):
     graph.remove_edges_from(edges_to_remove)
 
     # Apply the Louvain method for community detection
-    best_partition = community_louvain.best_partition(graph, resolution=1.1)
+    best_partition = community_louvain.best_partition(graph, resolution=resolution)
 
     # Group nodes by their community
     clusters = {}
@@ -121,7 +121,7 @@ def calculate_cluster_averages(clusters, target_values):
 
 def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clusters_with_scores.png"):
     """
-    Plot clusters with well-being scores in a network graph.
+    Plot clusters with work-life balance scores in a network graph.
     
     Parameters:
     - similarity_graph: 2D array representing the similarity graph
@@ -153,7 +153,7 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clus
     
     # Add a legend
     plt.legend(scatterpoints=1, loc="upper right", markerscale=0.5, fontsize=8)
-    plt.title("Network Graph of Well-being Scores by Cluster")
+    plt.title("Network Graph of Work-Life Balance Scores by Cluster")
 
     # Save plot to file
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -164,7 +164,7 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clus
 def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png"):
     """
     Plot each point where the y-axis is the cluster index (sorted by average work-life balance score)
-    and the x-axis is the well-being score. Each cluster is represented with a different color.
+    and the x-axis is the work-life balance score. Each cluster is represented with a different color.
     
     Parameters:
     - clusters: dict where keys are cluster labels and values are lists of node indices
@@ -194,10 +194,10 @@ def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png")
                     color=cluster_color_map[cluster], label=f"Cluster {cluster}", alpha=0.7)
 
     # Add labels and legend
-    plt.xlabel("Well-being Score")
+    plt.xlabel("Work-Life Balance Score")
     plt.ylabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
-    plt.title("Well-being Scores by Sorted Clusters")
-    plt.legend(loc="best", fontsize=8)
+    plt.title("Work-Life Balance Scores by Sorted Clusters")
+    # plt.legend(loc="best", fontsize=8)
     plt.grid(True, linestyle='--', alpha=0.5)
 
     # Save plot to file

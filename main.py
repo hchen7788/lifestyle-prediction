@@ -6,7 +6,7 @@ import utils
 
 # load data
 df = utils.load_data(partition="all")
-df = df[:500]
+# df = df[:500]
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
 
@@ -54,7 +54,7 @@ for i in range(len(y_test)):
 
 
 # clustering (Louvain, etc)
-clusters = utils.get_clusters(scaled_similarity_graph, threshold=0.7, method="louvain")
+clusters = utils.get_clusters(scaled_similarity_graph, threshold=0.5, method="louvain")
 
 # Calculate average work-life balance score per cluster
 cluster_averages = utils.calculate_cluster_averages(clusters, target)
