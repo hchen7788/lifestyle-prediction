@@ -39,5 +39,9 @@ model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.2)
 embedding_model = Model(inputs=model.input, outputs=model.layers[-2].output)
 
 # save model
-with open('mlp_model.pkl', 'wb') as file:
+with open('mlp_model_embeddings.pkl', 'wb') as file:
     pickle.dump(embedding_model, file)
+
+# Save the complete model that predicts the final work-life balance score
+with open('mlp_model.pkl', 'wb') as file:
+    pickle.dump(model, file)
