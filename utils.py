@@ -83,18 +83,22 @@ def louvain_method(similarity_graph, threshold=0.2):
 
     assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
     
-    # Create an undirected weighted graph
-    graph = nx.Graph()
-    num_nodes = similarity_graph.shape[0]
+    # # Create an undirected weighted graph
+    # graph = nx.Graph()
+    # num_nodes = similarity_graph.shape[0]
 
-    # Add edges based on thresholded similarity values
-    for i in range(num_nodes):
-        for j in range(i + 1, num_nodes):
-            if similarity_graph[i, j] >= threshold:
-                graph.add_edge(i, j, weight=similarity_graph[i, j])
+    # # Add edges based on thresholded similarity values
+    # for i in range(num_nodes):
+    #     for j in range(num_nodes):
+    #         # if similarity_graph[i, j] >= threshold:
+    #         if i != j:
+    #             graph.add_edge(i, j, weight=similarity_graph[i, j])
+
+    graph = nx.from_numpy_array(similarity_graph)
+    graph.remove_edges_from(nx.selfloop_edges(graph))
 
     # Apply the Louvain method for community detection
-    best_partition = community_louvain.best_partition(graph, resolution=1.5)
+    best_partition = community_louvain.best_partition(graph, resolution=1.25)
 
     # Group nodes by their community
     clusters = {}
@@ -134,7 +138,7 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores):
 
     # Draw nodes with color based on cluster and size based on work-life balance score
     for cluster, nodes in clusters.items():
-        node_sizes = [scores[node] * 20 for node in nodes]  # Scale size by score
+        node_sizes = [1 for score in scores] #[scores[node] * 20 for node in nodes]  # Scale size by score
         nx.draw_networkx_nodes(graph, pos, nodelist=nodes, node_size=node_sizes,
                                node_color=[cluster_color_map[cluster]] * len(nodes),
                                label=f"Cluster {cluster}")

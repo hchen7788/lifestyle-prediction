@@ -6,6 +6,7 @@ import utils
 
 # load data
 df = utils.load_data(partition="all")
+df = df[:500]
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
 
@@ -34,18 +35,26 @@ predictions = mlp.predict(X_test)
 # calculate cosine similarities and similarity graph
 similarity_graph = utils.get_similarity_graph(embeddings)
 
+minmax_scaler = MinMaxScaler()
+
+flattened_graph = similarity_graph.flatten()
+
+scaled_flattened_graph = minmax_scaler.fit_transform(flattened_graph.reshape(-1, 1)).flatten()
+
+scaled_similarity_graph = scaled_flattened_graph.reshape(similarity_graph.shape)
+
 # calculate and print mean squared error
 mse = mean_squared_error(y_test, predictions)
 print(f"Mean Squared Error on the test set: {mse}")
 
 # optional: print a few sample predictions and their corresponding actual values
-for i in range(10):
+for i in range(len(y_test)):
     print(f"Predicted: {predictions[i]}, Actual: {y_test.iloc[i]}")
 
 
 
 # clustering (Louvain, etc)
-clusters = utils.get_clusters(similarity_graph)
+clusters = utils.get_clusters(scaled_similarity_graph)
 
 # Calculate average work-life balance score per cluster
 cluster_averages = utils.calculate_cluster_averages(clusters, target)
@@ -53,7 +62,7 @@ cluster_averages = utils.calculate_cluster_averages(clusters, target)
 print("Average work-life balance score per cluster:", cluster_averages)
 
 # Plot with well-being scores and cluster colors
-utils.plot_clusters_with_scores(similarity_graph, clusters, target)
+utils.plot_clusters_with_scores(scaled_similarity_graph, clusters, target)
 
 # Print each cluster with its nodes
 for cluster, nodes in clusters.items():
