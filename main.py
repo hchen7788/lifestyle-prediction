@@ -1,7 +1,7 @@
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import utils
 
 # load data
@@ -43,13 +43,18 @@ scaled_flattened_graph = minmax_scaler.fit_transform(flattened_graph.reshape(-1,
 
 scaled_similarity_graph = scaled_flattened_graph.reshape(similarity_graph.shape)
 
-# calculate and print mean squared error
-mse = mean_squared_error(y_test, predictions)
-print(f"Mean Squared Error on the test set: {mse}")
-
 # optional: print a few sample predictions and their corresponding actual values
 for i in range(len(y_test)):
     print(f"Predicted: {predictions[i]}, Actual: {y_test.iloc[i]}")
+
+
+# calculate and print mean squared error
+mse = mean_squared_error(y_test, predictions)
+print(f"Mean Squared Error on the test set: {mse}")
+mae = mean_absolute_error(y_test, predictions)
+print(f"Mean Absolute Error on the test set: {mae}")
+r2 = r2_score(y_test, predictions)
+print(f"R^2 Score on the test set: {r2}")
 
 
 
