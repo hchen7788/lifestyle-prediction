@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 import community as community_louvain
+from sklearn.cluster import KMeans
 
 def load_data(partition):
     
@@ -64,7 +65,22 @@ def louvain_method(similarity_graph, threshold=0.2):
     
     return clusters
 
+def kmeans(similarity_graph, number_clusters):
+    similarity_graph_np = np.array(similarity_graph)
+    # We want similar nodes to be closer
+    distance_graph = 1 - similarity_graph_np
+    kmeans = KMeans(n_clusters=number_clusters)
+    labels = kmeans.fit_predict(distance_graph)
 
+    clusters = {}
+
+    for idx, label in enumerate(labels):
+        label = int(label)
+        if label not in clusters:
+            clusters[label] = []
+        clusters[label].append(idx)
+
+    return clusters
 
 
     
