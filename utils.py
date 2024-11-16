@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import community as community_louvain
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import SpectralClustering
 
 
 def load_data(partition):
@@ -28,10 +29,32 @@ def get_similarity_graph(embeddings):
     return cosine_similarity(embeddings)
     
 
-def get_clusters(similarity_graph, threshold=0.5, resolution=1.0, method="louvain"):
+def get_clusters(similarity_graph, threshold=0.7, resolution=1.0, method="louvain", n_clusters=None):
+    """
+    Detect clusters in a graph using specified clustering method.
+    
+    Parameters:
+    - similarity_graph: 2D array representing the similarity graph
+    - threshold: Minimum similarity value to consider an edge (applies to louvain)
+    - resolution: Resolution parameter for Louvain (applies to louvain)
+    - method: Clustering method ("louvain" or "spectral")
+    - n_clusters: Number of clusters for spectral clustering (required if method is "spectral")
+    
+    Returns:
+    - clusters: Dictionary where keys are cluster labels and values are lists of node indices
+    """
     if method == "louvain":
-        return louvain_method(similarity_graph, threshold, resolution)    
-
+        return louvain_method(similarity_graph, threshold, resolution)
+    elif method == "spectral":
+        if n_clusters is None:
+            raise ValueError("For spectral clustering, you must specify the number of clusters (n_clusters).")
+        return spectral_clustering_method(similarity_graph, n_clusters)
+    elif method == "girvan_newman":
+        if n_clusters is None:
+            raise ValueError("For girvan-newman clustering, you must specify the number of clusters (n_clusters).")
+        return girvan_newman_method(similarity_graph, threshold, max_clusters=n_clusters)
+    else:
+        raise ValueError(f"Unsupported clustering method: {method}")
 
 # # Assuming that the similarity graph is a 2D matrix passed
 # # Change threshold depending on results
@@ -99,6 +122,85 @@ def louvain_method(similarity_graph, threshold, resolution):
         clusters.setdefault(community, []).append(node)
     
     return clusters
+
+def spectral_clustering_method(similarity_graph, n_clusters, threshold=None):
+    """
+    Perform spectral clustering on a similarity graph with optional thresholding.
+    
+    Parameters:
+    - similarity_graph: 2D array representing the similarity graph
+    - n_clusters: Number of clusters to create
+    - threshold: Minimum similarity value to consider an edge (optional)
+    
+    Returns:
+    - clusters: Dictionary where keys are cluster labels and values are lists of node indices
+    """
+    
+    # Apply thresholding to sparsify the similarity graph if a threshold is provided
+    if threshold is not None:
+        similarity_graph = np.where(similarity_graph >= threshold, similarity_graph, 0)
+    
+    # Apply Spectral Clustering
+    spectral = SpectralClustering(
+        n_clusters=n_clusters,
+        affinity="precomputed",  # Use the similarity matrix as the affinity matrix
+        random_state=42
+    )
+    
+    # Fit and get cluster labels
+    labels = spectral.fit_predict(similarity_graph)
+    
+    # Group nodes by their cluster
+    clusters = {}
+    for node, cluster in enumerate(labels):
+        clusters.setdefault(cluster, []).append(node)
+    
+    return clusters
+
+def girvan_newman_method(similarity_graph, threshold, max_clusters):
+    """
+    Perform Girvan-Newman clustering on a similarity graph.
+
+    Parameters:
+    - similarity_graph: 2D array representing the similarity graph
+    - max_clusters: Maximum number of clusters to generate
+    
+    Returns:
+    - clusters: Dictionary where keys are cluster labels and values are lists of node indices
+    """
+    # Check that the similarity graph is a square matrix
+    assert similarity_graph.shape[0] == similarity_graph.shape[1], 'Similarity graph should be a square matrix!'
+    
+    # Ensure the similarity graph is symmetric
+    def is_symmetric(graph_sim):
+        return np.allclose(graph_sim, graph_sim.T)
+
+    assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
+    
+    # Create an undirected weighted graph from the similarity matrix
+    graph = nx.from_numpy_array(similarity_graph)
+    graph.remove_edges_from(nx.selfloop_edges(graph))
+
+    # Remove edges with weight less than the threshold
+    edges_to_remove = [(u, v) for u, v, weight in graph.edges(data="weight") if weight < threshold]
+    graph.remove_edges_from(edges_to_remove)
+    
+    # Apply the Girvan-Newman method for community detection
+    communities_generator = nx.community.girvan_newman(graph)
+    
+    # Stop when the desired number of clusters is reached
+    for communities in communities_generator:
+        if len(communities) >= max_clusters:
+            break
+    
+    # Assign clusters based on the resulting communities
+    clusters = {}
+    for i, community in enumerate(communities):
+        for node in community:
+            clusters.setdefault(i, []).append(node)
+    
+    return clusters
+
 
 
 def calculate_cluster_averages(clusters, target_values):
