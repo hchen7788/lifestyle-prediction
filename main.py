@@ -38,9 +38,9 @@ embeddings = mlp_embeddings.predict(X_test)
 similarity_graph = utils.get_similarity_graph(embeddings)
 
 # clustering (Louvain, etc)
-louvain_clusters = utils.get_clusters(similarity_graph, threshold=0.5, method="louvain")
+# louvain_clusters = utils.get_clusters(similarity_graph, threshold=0.5, method="louvain")
 
 # faiss clustering
-faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=3)
+faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=10)
 # index: data index; elements: corresponding cluster indices
 utils.plot_faiss_clusters(cluster_assignments=faiss_clusters, target=y_test_values)

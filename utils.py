@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -178,55 +179,63 @@ def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clus
     plt.show()
 
 def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png"):
-    """
-    Plot each point where the y-axis is the cluster index (sorted by average work-life balance score)
-    and the x-axis is the work-life balance score. Each cluster is represented with a different color.
-    
-    Parameters:
-    - clusters: dict where keys are cluster labels and values are lists of node indices
-    - scores: Series or list of work-life balance scores corresponding to each node
-    - filename: Name of the file to save the plot
-    """
-    # Calculate average work-life balance score for each cluster
+
     cluster_averages = {cluster: scores.iloc[nodes].mean() for cluster, nodes in clusters.items()}
 
-    # Sort clusters by average work-life balance score
     sorted_clusters = sorted(cluster_averages.items(), key=lambda x: x[1])
     sorted_cluster_indices = {cluster: idx for idx, (cluster, _) in enumerate(sorted_clusters)}
 
-    # Create a color map for clusters
     unique_clusters = list(sorted_cluster_indices.keys())
     colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_clusters)))
     cluster_color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
 
-    # Initialize the plot
     plt.figure(figsize=(10, 6))
 
-    # Plot each cluster
     for cluster, nodes in clusters.items():
         cluster_scores = scores.iloc[nodes]
         sorted_y = sorted_cluster_indices[cluster]
         plt.scatter(cluster_scores, [sorted_y] * len(cluster_scores), 
                     color=cluster_color_map[cluster], label=f"Cluster {cluster}", alpha=0.7)
 
-    # Add labels and legend
     plt.xlabel("Work-Life Balance Score")
     plt.ylabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
     plt.title("Work-Life Balance Scores by Sorted Clusters")
     # plt.legend(loc="best", fontsize=8)
     plt.grid(True, linestyle='--', alpha=0.5)
 
-    # Save plot to file
     plt.savefig(filename, dpi=300, bbox_inches='tight')
 
-    # Display the plot
     plt.show()
 
+# def plot_faiss_clusters(cluster_assignments=None, target=None):
+#     plt.figure(figsize=(8, 6))
+#     plt.scatter(cluster_assignments, target, alpha=0.7, c=cluster_assignments, cmap='viridis')
+#     plt.title("Clusters by FAISS")
+#     plt.xlabel("Cluster Index")
+#     plt.ylabel("Work-Life Balance Score")
+#     plt.xticks(range(min(cluster_assignments), max(cluster_assignments) + 1))
+#     plt.savefig("faiss_clusters.png")
+
 def plot_faiss_clusters(cluster_assignments=None, target=None):
+    cluster_assignments = np.array(cluster_assignments)
+    target = np.array(target)
+    
+    unique_clusters = np.unique(cluster_assignments)
+    cluster_means = {cluster: target[cluster_assignments == cluster].mean() for cluster in unique_clusters}
+    
+    sorted_clusters = sorted(cluster_means.keys(), key=lambda x: cluster_means[x])
+    
+    sorted_mapping = {cluster: i for i, cluster in enumerate(sorted_clusters)}
+    sorted_cluster_assignments = np.array([sorted_mapping[cluster] for cluster in cluster_assignments])
+    
     plt.figure(figsize=(8, 6))
-    plt.scatter(cluster_assignments, target, alpha=0.7, c=cluster_assignments, cmap='viridis')
-    plt.title("Clusters by FAISS")
-    plt.xlabel("Cluster Index")
+    scatter = plt.scatter(
+        sorted_cluster_assignments, target, 
+        alpha=0.7, c=sorted_cluster_assignments, cmap='viridis'
+    )
+    plt.title("Clusters by FAISS (Sorted by Mean Work-Life Balance)")
+    plt.xlabel("Cluster Index (Sorted by Mean)")
     plt.ylabel("Work-Life Balance Score")
-    plt.xticks(range(min(cluster_assignments), max(cluster_assignments) + 1))
+    plt.xticks(range(len(sorted_clusters)), labels=[f"{i}" for i in range(len(sorted_clusters))])
     plt.savefig("faiss_clusters.png")
+
