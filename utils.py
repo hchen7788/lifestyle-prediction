@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import community as community_louvain
 from sklearn.metrics.pairwise import cosine_similarity
+import faiss
 
 
 def load_data(partition):
@@ -28,9 +29,11 @@ def get_similarity_graph(embeddings):
     return cosine_similarity(embeddings)
     
 
-def get_clusters(similarity_graph, threshold=0.5, resolution=1.0, method="louvain"):
+def get_clusters(similarity_graph=None, threshold=0.5, resolution=1.0, method="louvain", embeddings=None, k=3):
     if method == "louvain":
-        return louvain_method(similarity_graph, threshold, resolution)    
+        return louvain_method(similarity_graph, threshold, resolution)   
+    elif method == "faiss":
+        return faiss_method(embeddings, k)
 
 
 # # Assuming that the similarity graph is a 2D matrix passed
@@ -99,6 +102,19 @@ def louvain_method(similarity_graph, threshold, resolution):
         clusters.setdefault(community, []).append(node)
     
     return clusters
+
+
+def faiss_method(embeddings, k=3):
+    kmeans = faiss.Kmeans(d=embeddings.shape[1], k=k, niter=20, verbose=True)
+    kmeans.train(embeddings)
+    # get centroids (cluster centers)
+    centroids = kmeans.centroids
+    # assign each data point to a cluster
+    _, cluster_assignments = kmeans.index.search(embeddings, 1)
+    # print("Cluster assignments shape:", cluster_assignments.shape)  # (3195, 1)
+    cluster_assignments = [cluster_assignments[i][0] for i in range(len(cluster_assignments))]
+
+    return cluster_assignments
 
 
 def calculate_cluster_averages(clusters, target_values):
@@ -205,3 +221,12 @@ def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png")
 
     # Display the plot
     plt.show()
+
+def plot_faiss_clusters(cluster_assignments=None, target=None):
+    plt.figure(figsize=(8, 6))
+    plt.scatter(cluster_assignments, target, alpha=0.7, c=cluster_assignments, cmap='viridis')
+    plt.title("Clusters by FAISS")
+    plt.xlabel("Cluster Index")
+    plt.ylabel("Work-Life Balance Score")
+    plt.xticks(range(min(cluster_assignments), max(cluster_assignments) + 1))
+    plt.savefig("faiss_clusters.png")
