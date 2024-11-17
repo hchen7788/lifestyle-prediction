@@ -37,18 +37,19 @@ embeddings = mlp_embeddings.predict(X_test_scaled)
 # calculate cosine similarities and similarity graph
 similarity_graph = utils.get_similarity_graph(embeddings)
 
-# clustering (Louvain, etc)
 # louvain_clusters = utils.get_clusters(similarity_graph, threshold=0.5, method="louvain")
 
+
+num_clusters = 10
 # faiss clustering
-faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=10)
+faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=num_clusters)
 # index: data index; elements: corresponding cluster indices
 utils.plot_faiss_clusters(cluster_assignments=faiss_clusters, target=y_test_values)
 
 utils.plot_clusters_vs_features(
     cluster_assignments=faiss_clusters, 
-    features=X_test,  # Use the normalized test data
-    target=y_test_values,  # Use the actual target values for sorting
-    output_dir="plots",  # Directory to save the plots
-    filename_prefix="sorted_cluster"  # Prefix for the plot filenames
+    features=X_test,
+    target=y_test_values,
+    output_dir="plots",
+    filename_prefix="sorted_cluster"
 )

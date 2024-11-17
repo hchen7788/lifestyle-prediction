@@ -37,43 +37,6 @@ def get_clusters(similarity_graph=None, threshold=0.5, resolution=1.0, method="l
         return faiss_method(embeddings, k)
 
 
-# # Assuming that the similarity graph is a 2D matrix passed
-# # Change threshold depending on results
-# # Documentation: https://python-louvain.readthedocs.io/en/latest/api.html
-# def louvain_method(similarity_graph, threshold=0.2):
-#     print('inside louvain_method')
-#     assert len(similarity_graph[0]) == len(similarity_graph), 'Similarity graph should be square matrix!'
-
-#     def is_symmetric(graph_sim):
-#         sim_graph_np = np.array(graph_sim)
-#         return np.array_equal(sim_graph_np, sim_graph_np.T)
-    
-#     assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
-    
-#     graph = nx.Graph()
-
-#     num_nodes = len(similarity_graph)
-
-#     for i in range(num_nodes):
-#         for j in range(i+1, num_nodes):
-#             # TODO: Check if > or >= is more appropriate
-#             if similarity_graph[i][j] >= threshold:
-#                 # TODO: Check if labels can be accessed via similarity graph. That way the similarity can 
-#                 graph.add_edge(i, j, weight=similarity_graph[i][j])
-    
-#     best_partition = community_louvain.best_partition(graph, resolution=1.5)
-
-#     clusters = {}
-#     for node, community in best_partition.items():
-#         # Every node [0 indexed] will be assigned a community
-#         # node 0 -> community 0
-#         # node 1 -> community 0
-
-#         clusters.setdefault(community, []).append(node)
-    
-#     return clusters
-
-
 def louvain_method(similarity_graph, threshold, resolution):
     print('inside louvain_method')
     
@@ -119,16 +82,6 @@ def faiss_method(embeddings, k=3):
 
 
 def calculate_cluster_averages(clusters, target_values):
-    """
-    Calculate the average work-life balance score for each cluster.
-    
-    Parameters:
-    - clusters: dict where keys are cluster labels and values are lists of node indices
-    - target_values: Series or list of target values (work-life balance scores) corresponding to each node
-    
-    Returns:
-    - dict with cluster labels as keys and their average work-life balance score as values
-    """
     cluster_averages = {}
     for cluster, nodes in clusters.items():
         scores = target_values.iloc[nodes]
@@ -136,47 +89,6 @@ def calculate_cluster_averages(clusters, target_values):
     
     return cluster_averages
 
-def plot_clusters_with_scores(similarity_graph, clusters, scores, filename="clusters_with_scores.png"):
-    """
-    Plot clusters with work-life balance scores in a network graph.
-    
-    Parameters:
-    - similarity_graph: 2D array representing the similarity graph
-    - clusters: dict where keys are cluster labels and values are lists of node indices
-    - scores: Series or list of scores corresponding to each node
-    - filename: Name of the file to save the plot
-    """
-    graph = nx.Graph(similarity_graph)
-    # Create a color map for clusters
-    unique_clusters = list(clusters.keys())
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_clusters)))
-    cluster_color_map = {cluster: colors[i] for i, cluster in enumerate(unique_clusters)}
-
-    # Create network plot
-    pos = nx.spring_layout(graph)  # Positions for all nodes
-
-    # Draw nodes with color based on cluster and size based on work-life balance score
-    for cluster, nodes in clusters.items():
-        node_sizes = [1 for score in scores]  # [scores[node] * 20 for node in nodes]  
-        nx.draw_networkx_nodes(graph, pos, nodelist=nodes, node_size=node_sizes,
-                               node_color=[cluster_color_map[cluster]] * len(nodes),
-                               label=f"Cluster {cluster}")
-    
-    # Draw edges
-    nx.draw_networkx_edges(graph, pos, alpha=0.5)
-
-    # Add labels
-    nx.draw_networkx_labels(graph, pos, font_size=8)
-    
-    # Add a legend
-    plt.legend(scatterpoints=1, loc="upper right", markerscale=0.5, fontsize=8)
-    plt.title("Network Graph of Work-Life Balance Scores by Cluster")
-
-    # Save plot to file
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-
-    # Display the plot
-    plt.show()
 
 def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png"):
 
@@ -206,15 +118,6 @@ def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png")
     plt.savefig(filename, dpi=300, bbox_inches='tight')
 
     plt.show()
-
-# def plot_faiss_clusters(cluster_assignments=None, target=None):
-#     plt.figure(figsize=(8, 6))
-#     plt.scatter(cluster_assignments, target, alpha=0.7, c=cluster_assignments, cmap='viridis')
-#     plt.title("Clusters by FAISS")
-#     plt.xlabel("Cluster Index")
-#     plt.ylabel("Work-Life Balance Score")
-#     plt.xticks(range(min(cluster_assignments), max(cluster_assignments) + 1))
-#     plt.savefig("faiss_clusters.png")
 
 def plot_faiss_clusters(cluster_assignments=None, target=None):
     cluster_assignments = np.array(cluster_assignments)
