@@ -19,7 +19,7 @@ y_test_values = y_test.values
 
 # normalize features
 scaler = StandardScaler()
-X_test = scaler.fit_transform(X_test)
+X_test_scaled = scaler.fit_transform(X_test)
 
 # load model
 mlp_embeddings = None
@@ -32,7 +32,7 @@ with open('mlp_model.pkl', 'rb') as file:
     mlp = pickle.load(file)
 
 # extract embeddings
-embeddings = mlp_embeddings.predict(X_test)
+embeddings = mlp_embeddings.predict(X_test_scaled)
 
 # calculate cosine similarities and similarity graph
 similarity_graph = utils.get_similarity_graph(embeddings)
@@ -44,3 +44,11 @@ similarity_graph = utils.get_similarity_graph(embeddings)
 faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=10)
 # index: data index; elements: corresponding cluster indices
 utils.plot_faiss_clusters(cluster_assignments=faiss_clusters, target=y_test_values)
+
+utils.plot_clusters_vs_features(
+    cluster_assignments=faiss_clusters, 
+    features=X_test,  # Use the normalized test data
+    target=y_test_values,  # Use the actual target values for sorting
+    output_dir="plots",  # Directory to save the plots
+    filename_prefix="sorted_cluster"  # Prefix for the plot filenames
+)

@@ -239,3 +239,42 @@ def plot_faiss_clusters(cluster_assignments=None, target=None):
     plt.xticks(range(len(sorted_clusters)), labels=[f"{i}" for i in range(len(sorted_clusters))])
     plt.savefig("faiss_clusters.png")
 
+def plot_clusters_vs_features(cluster_assignments, features, target=None, output_dir="plots", filename_prefix="cluster_vs_feature"):
+    os.makedirs(output_dir, exist_ok=True)
+
+    cluster_assignments = np.array(cluster_assignments)
+
+    if isinstance(features, pd.DataFrame):
+        feature_names = features.columns  # Use DataFrame column names
+        features = features.values.astype(float)  # Convert DataFrame to NumPy array and ensure numeric values
+    else:
+        num_features = features.shape[1]
+        feature_names = [f"Feature {i}" for i in range(num_features)]  # Generate generic feature names for NumPy array
+        features = features.astype(float)  # Ensure numeric values
+
+    if target is not None:
+        target = np.array(target)
+        unique_clusters = np.unique(cluster_assignments)
+        cluster_means = {cluster: target[cluster_assignments == cluster].mean() for cluster in unique_clusters}
+        sorted_clusters = sorted(cluster_means.keys(), key=lambda x: cluster_means[x])
+    else:
+        sorted_clusters = sorted(np.unique(cluster_assignments))
+    
+    sorted_mapping = {cluster: i for i, cluster in enumerate(sorted_clusters)}
+    sorted_cluster_assignments = np.array([sorted_mapping[cluster] for cluster in cluster_assignments])
+    
+    for i, feature_name in enumerate(feature_names):
+        plt.figure(figsize=(8, 6))
+
+        cluster_feature_values = [[] for _ in range(len(sorted_clusters))]
+        for cluster, value in zip(sorted_cluster_assignments, features[:, i]):
+            cluster_feature_values[cluster].append(value)
+
+        plt.boxplot(cluster_feature_values, positions=range(len(sorted_clusters)), patch_artist=True)
+        plt.title(f"Clusters by FAISS (Sorted) vs {feature_name}")
+        plt.xlabel("Cluster Index (Sorted by Mean Work-Life Balance Score)")
+        plt.ylabel(feature_name)
+        plt.xticks(range(len(sorted_clusters)), labels=[f"{i}" for i in range(len(sorted_clusters))])
+        filename = os.path.join(output_dir, f"{filename_prefix}_{feature_name.replace(' ', '_')}.png")
+        plt.savefig(filename, dpi=300, bbox_inches='tight')
+        plt.close()
