@@ -6,7 +6,7 @@ import networkx as nx
 import community as community_louvain
 from sklearn.metrics.pairwise import cosine_similarity
 import faiss
-
+from sklearn.cluster import KMeans
 
 def load_data(partition):
     
@@ -67,6 +67,12 @@ def louvain_method(similarity_graph, threshold, resolution):
     
     return clusters
 
+def kmeans(similarity_graph, number_clusters):
+    similarity_graph_np = np.array(similarity_graph)
+    # We want similar nodes to be closer
+    distance_graph = 1 - similarity_graph_np
+    kmeans = KMeans(n_clusters=number_clusters)
+    labels = kmeans.fit_predict(distance_graph)
 
 def faiss_method(embeddings, k=3):
     kmeans = faiss.Kmeans(d=embeddings.shape[1], k=k, niter=20, verbose=True)
