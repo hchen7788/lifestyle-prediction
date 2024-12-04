@@ -6,7 +6,7 @@ import utils
 
 # load data
 df = utils.load_data(partition="all")
-df = df[:500]
+# df = df[:500]
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
 
@@ -55,6 +55,8 @@ for i in range(len(y_test)):
 
 # Calculate Louvain clusters and their averages
 louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.0)
+# 10 clusters
+# louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.0409705)
 louvain_cluster_averages = utils.calculate_cluster_averages(louvain_clusters, target)
 
 print("Louvain clustering results:")
@@ -62,7 +64,7 @@ for cluster, avg in louvain_cluster_averages.items():
     print(f"Cluster {cluster} average work-life balance score: {avg}")
 
 # Plot Louvain clusters
-utils.plot_clusters_vs_scores(louvain_clusters, target, filename="louvain_clusters_vs_scores.png")
+utils.plot_clusters_vs_scores(louvain_clusters, target, filename="louvain_clusters_vs_scores_10cls.png")
 # utils.plot_clusters_with_scores(scaled_similarity_graph, louvain_clusters, target, filename="louvain_network_graph.png")
 
 # Calculate Spectral clusters and their averages
@@ -75,7 +77,7 @@ for cluster, avg in spectral_cluster_averages.items():
 
 # Plot Spectral clusters
 utils.plot_clusters_vs_scores(spectral_clusters, target, filename="spectral_clusters_vs_scores.png")
-# utils.plot_clusters_with_scores(scaled_similarity_graph, spectral_clusters, target, filename="spectral_network_graph.png")
+utils.plot_clusters_with_scores(scaled_similarity_graph, spectral_clusters, target, filename="spectral_network_graph.png")
 
 # Print each cluster with its nodes for both methods
 print("\nLouvain Clustering Nodes:")
