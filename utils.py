@@ -292,13 +292,17 @@ def plot_clusters_vs_scores(clusters, scores, filename="clusters_vs_scores.png")
     for cluster, nodes in clusters.items():
         cluster_scores = scores.iloc[nodes]
         sorted_y = sorted_cluster_indices[cluster]
-        plt.scatter(cluster_scores, [sorted_y] * len(cluster_scores), 
+        # plt.scatter(cluster_scores, [sorted_y] * len(cluster_scores), 
+        #             color=cluster_color_map[cluster], label=f"Cluster {cluster}", alpha=0.7)
+        plt.scatter([sorted_y] * len(cluster_scores), cluster_scores,
                     color=cluster_color_map[cluster], label=f"Cluster {cluster}", alpha=0.7)
 
     # Add labels and legend
-    plt.xlabel("Work-Life Balance Score")
-    plt.ylabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
-    plt.title("Work-Life Balance Scores by Sorted Clusters")
+    # plt.xlabel("Work-Life Balance Score")
+    # plt.ylabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
+    plt.ylabel("Work-Life Balance Score")
+    plt.xlabel("Cluster Index (Sorted by Avg Work-life Balance Score)")
+    plt.title("Clusters by Louvain by (Sorted by Mean Work-Life Balance")
     # plt.legend(loc="best", fontsize=8)
     plt.grid(True, linestyle='--', alpha=0.5)
 

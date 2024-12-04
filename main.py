@@ -54,53 +54,55 @@ for i in range(len(y_test)):
 
 
 # Calculate Louvain clusters and their averages
-louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.0)
+# louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.0)
 # 10 clusters
 # louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.0409705)
-louvain_cluster_averages = utils.calculate_cluster_averages(louvain_clusters, target)
+# 5 clusters
+louvain_clusters = utils.get_clusters(scaled_similarity_graph, method="louvain", threshold=0.5, resolution=1.025)
+# louvain_cluster_averages = utils.calculate_cluster_averages(louvain_clusters, target)
 
-print("Louvain clustering results:")
-for cluster, avg in louvain_cluster_averages.items():
-    print(f"Cluster {cluster} average work-life balance score: {avg}")
+# print("Louvain clustering results:")
+# for cluster, avg in louvain_cluster_averages.items():
+#     print(f"Cluster {cluster} average work-life balance score: {avg}")
 
 # Plot Louvain clusters
-utils.plot_clusters_vs_scores(louvain_clusters, target, filename="louvain_clusters_vs_scores_10cls.png")
+utils.plot_clusters_vs_scores(louvain_clusters, target, filename="louvain_clusters_vs_scores_5cls.png")
 # utils.plot_clusters_with_scores(scaled_similarity_graph, louvain_clusters, target, filename="louvain_network_graph.png")
 
-# Calculate Spectral clusters and their averages
-spectral_clusters = utils.get_clusters(scaled_similarity_graph, method="spectral", n_clusters=5)
-spectral_cluster_averages = utils.calculate_cluster_averages(spectral_clusters, target)
+# # Calculate Spectral clusters and their averages
+# spectral_clusters = utils.get_clusters(scaled_similarity_graph, method="spectral", n_clusters=5)
+# spectral_cluster_averages = utils.calculate_cluster_averages(spectral_clusters, target)
 
-print("\nSpectral clustering results:")
-for cluster, avg in spectral_cluster_averages.items():
-    print(f"Cluster {cluster} average work-life balance score: {avg}")
+# print("\nSpectral clustering results:")
+# for cluster, avg in spectral_cluster_averages.items():
+#     print(f"Cluster {cluster} average work-life balance score: {avg}")
 
-# Plot Spectral clusters
-utils.plot_clusters_vs_scores(spectral_clusters, target, filename="spectral_clusters_vs_scores.png")
-utils.plot_clusters_with_scores(scaled_similarity_graph, spectral_clusters, target, filename="spectral_network_graph.png")
+# # Plot Spectral clusters
+# utils.plot_clusters_vs_scores(spectral_clusters, target, filename="spectral_clusters_vs_scores.png")
+# utils.plot_clusters_with_scores(scaled_similarity_graph, spectral_clusters, target, filename="spectral_network_graph.png")
 
-# Print each cluster with its nodes for both methods
-print("\nLouvain Clustering Nodes:")
-for cluster, nodes in louvain_clusters.items():
-    print(f"Cluster {cluster} has nodes: {nodes}")
+# # Print each cluster with its nodes for both methods
+# print("\nLouvain Clustering Nodes:")
+# for cluster, nodes in louvain_clusters.items():
+#     print(f"Cluster {cluster} has nodes: {nodes}")
 
-print("\nSpectral Clustering Nodes:")
-for cluster, nodes in spectral_clusters.items():
-    print(f"Cluster {cluster} has nodes: {nodes}")
+# print("\nSpectral Clustering Nodes:")
+# for cluster, nodes in spectral_clusters.items():
+#     print(f"Cluster {cluster} has nodes: {nodes}")
 
-# Girvan-Newman Clustering
-girvan_newman_clusters = utils.get_clusters(scaled_similarity_graph, method="girvan_newman", n_clusters=5)
-girvan_newman_cluster_averages = utils.calculate_cluster_averages(girvan_newman_clusters, target)
+# # Girvan-Newman Clustering
+# girvan_newman_clusters = utils.get_clusters(scaled_similarity_graph, method="girvan_newman", n_clusters=5)
+# girvan_newman_cluster_averages = utils.calculate_cluster_averages(girvan_newman_clusters, target)
 
-print("\nGirvan-Newman clustering results:")
-for cluster, avg in girvan_newman_cluster_averages.items():
-    print(f"Cluster {cluster} average work-life balance score: {avg}")
+# print("\nGirvan-Newman clustering results:")
+# for cluster, avg in girvan_newman_cluster_averages.items():
+#     print(f"Cluster {cluster} average work-life balance score: {avg}")
 
-# Plot Girvan-Newman clusters
-utils.plot_clusters_vs_scores(girvan_newman_clusters, target, filename="girvan_newman_clusters_vs_scores.png")
-# utils.plot_clusters_with_scores(scaled_similarity_graph, girvan_newman_clusters, target, filename="girvan_newman_network_graph.png")
+# # Plot Girvan-Newman clusters
+# utils.plot_clusters_vs_scores(girvan_newman_clusters, target, filename="girvan_newman_clusters_vs_scores.png")
+# # utils.plot_clusters_with_scores(scaled_similarity_graph, girvan_newman_clusters, target, filename="girvan_newman_network_graph.png")
 
-# Print each cluster with its nodes for Girvan-Newman
-print("\nGirvan-Newman Clustering Nodes:")
-for cluster, nodes in girvan_newman_clusters.items():
-    print(f"Cluster {cluster} has nodes: {nodes}")
+# # Print each cluster with its nodes for Girvan-Newman
+# print("\nGirvan-Newman Clustering Nodes:")
+# for cluster, nodes in girvan_newman_clusters.items():
+#     print(f"Cluster {cluster} has nodes: {nodes}")
