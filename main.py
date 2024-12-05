@@ -40,7 +40,7 @@ similarity_graph = utils.get_similarity_graph(embeddings)
 # louvain_clusters = utils.get_clusters(similarity_graph, threshold=0.5, method="louvain")
 
 
-num_clusters = 10
+num_clusters = 5
 # faiss clustering
 faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=num_clusters)
 # index: data index; elements: corresponding cluster indices
