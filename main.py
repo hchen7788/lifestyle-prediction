@@ -42,7 +42,9 @@ similarity_graph = utils.get_similarity_graph(embeddings)
 
 num_clusters = 5
 # faiss clustering
-faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=num_clusters)
+# faiss_clusters = utils.get_clusters(method="faiss", embeddings=embeddings, k=num_clusters)
+# get naive clusters
+faiss_clusters = utils.get_clusters(method="faiss", embeddings=X_test_scaled, k=num_clusters)
 # index: data index; elements: corresponding cluster indices
 utils.plot_faiss_clusters(cluster_assignments=faiss_clusters, target=y_test_values)
 
