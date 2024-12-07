@@ -138,15 +138,21 @@ def plot_faiss_clusters(cluster_assignments=None, target=None):
     sorted_cluster_assignments = np.array([sorted_mapping[cluster] for cluster in cluster_assignments])
     
     plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(
-        sorted_cluster_assignments, target, 
-        alpha=0.7, c=sorted_cluster_assignments, cmap='viridis'
-    )
+    # scatter = plt.scatter(
+    #     sorted_cluster_assignments, target, 
+    #     alpha=0.7, c=sorted_cluster_assignments, cmap='viridis'
+    # )
+    unique_clusters = sorted(set(sorted_cluster_assignments))  # Unique cluster indices
+    grouped_targets = [
+        [target[i] for i in range(len(sorted_cluster_assignments)) if sorted_cluster_assignments[i] == cluster]
+        for cluster in unique_clusters
+    ]
+    plt.boxplot(grouped_targets, positions=unique_clusters, widths=0.6, patch_artist=True)
     plt.title("Clusters by FAISS (Sorted by Mean Work-Life Balance)")
     plt.xlabel("Cluster Index (Sorted by Mean)")
     plt.ylabel("Work-Life Balance Score")
     plt.xticks(range(len(sorted_clusters)), labels=[f"{i}" for i in range(len(sorted_clusters))])
-    plt.savefig("faiss_clusters.png")
+    plt.savefig("faiss_clusters_5.png")
 
 def plot_clusters_vs_features(cluster_assignments, features, target=None, output_dir="plots", filename_prefix="cluster_vs_feature"):
     os.makedirs(output_dir, exist_ok=True)
