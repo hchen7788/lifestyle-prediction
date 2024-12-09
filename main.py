@@ -5,6 +5,8 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 from sklearn.metrics import silhouette_score, davies_bouldin_score, normalized_mutual_info_score
 import faiss
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import utils
@@ -13,6 +15,18 @@ import utils
 df = utils.load_data(partition="all")
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
+
+# get correlation matrix for WLB on plain data
+data = df.corr()
+WLB_corr = data.loc['WORK_LIFE_BALANCE_SCORE']
+plt.figure(figsize=(22, 1))
+df_piv = pd.DataFrame({cname: WLB_corr[WLB_corr.index==cname].iloc[0] for cname in WLB_corr.index}, index=['WORK_LIFE_BALANCE_SCORE'])
+df_piv.sort_values(axis=1, by='WORK_LIFE_BALANCE_SCORE', inplace=True, ascending=False)
+df_piv.drop(['WORK_LIFE_BALANCE_SCORE'], axis=1, inplace=True)
+# sns.heatmap(df_piv, annot=True, fmt='0.3f', cmap='GnBu')
+sns.heatmap(df_piv, annot=True, cmap='GnBu')
+plt.xticks(rotation=90)
+plt.savefig("correlation.png", bbox_inches='tight')
 
 # split data
 X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
