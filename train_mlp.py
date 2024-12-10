@@ -11,7 +11,7 @@ df = utils.load_data(partition="all")
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
 
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=1)
 
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)

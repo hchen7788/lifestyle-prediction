@@ -11,12 +11,10 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import utils
 
-# load data
 df = utils.load_data(partition="all")
 features = df.drop('WORK_LIFE_BALANCE_SCORE', axis=1)
 target = df['WORK_LIFE_BALANCE_SCORE']
 
-# get correlation matrix for WLB on plain data
 data = df.corr()
 WLB_corr = data.loc['WORK_LIFE_BALANCE_SCORE']
 plt.figure(figsize=(22, 1))
@@ -29,7 +27,7 @@ plt.xticks(rotation=90)
 plt.savefig("correlation.png", bbox_inches='tight')
 
 # split data
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=1)
 y_test_values = y_test.values
 
 # normalize features
