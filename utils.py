@@ -6,7 +6,7 @@ import networkx as nx
 import community as community_louvain
 from sklearn.metrics.pairwise import cosine_similarity
 import faiss
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, SpectralClustering
 
 def load_data(partition):
     
@@ -30,37 +30,36 @@ def get_similarity_graph(embeddings):
     return cosine_similarity(embeddings)
     
 
-def get_clusters(similarity_graph=None, threshold=0.5, resolution=1.0, method="louvain", embeddings=None, k=3):
+def get_clusters(similarity_graph=None, threshold=0.5, resolution=1.0, method="louvain", embeddings=None, k=3, n_clusters=5):
     if method == "louvain":
-        return louvain_method(similarity_graph, threshold, resolution)   
+        return louvain_method(similarity_graph, threshold, resolution)
     elif method == "faiss":
         return faiss_method(embeddings, k)
+    elif method == "spectral":
+        return spectral_method(embeddings, n_clusters)
+    elif method == "girvan_newman":
+        return girvan_newman_method(embeddings, threshold, max_communities=n_clusters)
+
 
 
 def louvain_method(similarity_graph, threshold, resolution):
     print('inside louvain_method')
     
-    # Check that the similarity graph is a square matrix
     assert similarity_graph.shape[0] == similarity_graph.shape[1], 'Similarity graph should be a square matrix!'
     
-    # Ensure the similarity graph is symmetric
     def is_symmetric(graph_sim):
         return np.allclose(graph_sim, graph_sim.T)
 
     assert is_symmetric(similarity_graph), 'Similarity graph has to be symmetric!'
     
-    # Create an undirected weighted graph from the similarity matrix
     graph = nx.from_numpy_array(similarity_graph)
     graph.remove_edges_from(nx.selfloop_edges(graph))
 
-    # Remove edges with weight less than the threshold
     edges_to_remove = [(u, v) for u, v, weight in graph.edges(data="weight") if weight < threshold]
     graph.remove_edges_from(edges_to_remove)
 
-    # Apply the Louvain method for community detection
     best_partition = community_louvain.best_partition(graph, resolution=resolution)
 
-    # Group nodes by their community
     clusters = {}
     for node, community in best_partition.items():
         clusters.setdefault(community, []).append(node)
@@ -77,14 +76,48 @@ def kmeans(similarity_graph, number_clusters):
 def faiss_method(embeddings, k=3):
     kmeans = faiss.Kmeans(d=embeddings.shape[1], k=k, niter=20, verbose=True)
     kmeans.train(embeddings)
-    # get centroids (cluster centers)
     centroids = kmeans.centroids
-    # assign each data point to a cluster
     _, cluster_assignments = kmeans.index.search(embeddings, 1)
     # print("Cluster assignments shape:", cluster_assignments.shape)  # (3195, 1)
     cluster_assignments = [cluster_assignments[i][0] for i in range(len(cluster_assignments))]
 
     return cluster_assignments
+
+def spectral_method(embeddings, n_clusters=5):
+    print('Using spectral clustering...')
+    similarity_graph = get_similarity_graph(embeddings)
+
+    spectral = SpectralClustering(
+        n_clusters=n_clusters,
+        affinity="precomputed",
+        random_state=1
+    )
+    cluster_assignments = spectral.fit_predict(similarity_graph)
+    return cluster_assignments
+
+def girvan_newman_method(embeddings, threshold=0.5, max_communities=5):
+    print('Using Girvan-Newman clustering...')
+    similarity_graph = get_similarity_graph(embeddings)
+    
+    graph = nx.from_numpy_array(similarity_graph)
+    graph.remove_edges_from(nx.selfloop_edges(graph))
+
+    edges_to_remove = [(u, v) for u, v, weight in graph.edges(data="weight") if weight < threshold]
+    graph.remove_edges_from(edges_to_remove)
+
+    communities_generator = nx.algorithms.community.girvan_newman(graph)
+
+    communities = []
+    for i, partition in enumerate(communities_generator):
+        communities.append(partition)
+        print(f"Partition {i + 1}: {partition}")
+
+        if len(partition) >= max_communities:
+            break
+
+    clusters = {i: list(community) for i, community in enumerate(communities[-1])}
+    
+    return clusters
 
 
 def calculate_cluster_averages(clusters, target_values):
@@ -148,7 +181,7 @@ def plot_faiss_clusters(cluster_assignments=None, target=None):
         for cluster in unique_clusters
     ]
     plt.boxplot(grouped_targets, positions=unique_clusters, widths=0.6, patch_artist=True)
-    plt.title("Clusters by FAISS (Sorted by Mean Work-Life Balance)")
+    plt.title("Clusters by Girvan-Newman (Sorted by Mean Work-Life Balance)")
     plt.xlabel("Cluster Index (Sorted by Mean)")
     plt.ylabel("Work-Life Balance Score")
     plt.xticks(range(len(sorted_clusters)), labels=[f"{i}" for i in range(len(sorted_clusters))])
